@@ -1,0 +1,70 @@
+cmake_minimum_required(VERSION 3.22)
+set(CMAKE_CXX_STANDARD 17)
+
+project(
+    PORTAL301_ZED_Application
+    VERSION 1.0
+)
+
+# FILE(GLOB_RECURSE HDR_FILES includes/*.hpp)
+add_executable(program main.cpp)
+add_subdirectory(lib)
+
+# find_package(ZED 3 REQUIRED)
+# find_package(CUDA ${ZED_CUDA_VERSION} REQUIRED)
+# find_package(PkgConfig REQUIRED)
+# pkg_check_modules(gtk3 REQUIRED IMPORTED_TARGET gtk+-3.0)
+# pkg_search_module(gstreamer REQUIRED IMPORTED_TARGET gstreamer-1.0>=1.4)
+# pkg_search_module(gstreamer-sdp REQUIRED IMPORTED_TARGET gstreamer-sdp-1.0>=1.4)
+# pkg_search_module(gstreamer-app REQUIRED IMPORTED_TARGET gstreamer-app-1.0>=1.4)
+# pkg_search_module(gstreamer-video REQUIRED IMPORTED_TARGET gstreamer-video-1.0>=1.4)
+# FetchContent_Declare(json
+#         GIT_REPOSITORY https://github.com/nlohmann/json
+#         GIT_TAG v3.10.5
+#         GIT_PROGRESS TRUE
+#         GIT_SHALLOW TRUE
+# )
+# FetchContent_MakeAvailable(json)
+# find_package(LibDataChannel REQUIRED)
+# find_package(sioclient REQUIRED)
+# find_package(OpenSSL REQUIRED)
+
+
+# include_directories(${LibDataChannel_INCLUDE_DIRS})
+# include_directories(${CUDA_INCLUDE_DIRS})
+# include_directories(${ZED_INCLUDE_DIRS})
+# include_directories(
+#     /usr/include/gstreamer-1.0
+#     /usr/include/glib-2.0
+#     )
+
+# link_directories(${ZED_LIBRARY_DIR})
+# link_directories(${CUDA_LIBRARY_DIRS})
+
+# if (LINK_SHARED_ZED)
+#     SET(ZED_LIBS ${ZED_LIBRARIES} ${CUDA_CUDA_LIBRARY} ${CUDA_CUDART_LIBRARY})
+# else()
+#     SET(ZED_LIBS ${ZED_STATIC_LIBRARIES} ${CUDA_CUDA_LIBRARY} ${CUDA_LIBRARY})
+# endif()
+
+target_include_directories(
+    program
+        PUBLIC
+        ${CMAKE_SOURCE_DIR}/includes
+)
+
+
+target_link_libraries(program 
+        myzed
+        # ${ZED_LIBS}
+        # PkgConfig::gtk3
+        # PkgConfig::gstreamer
+        # PkgConfig::gstreamer-sdp
+        # PkgConfig::gstreamer-app
+        # PkgConfig::gstreamer-video  
+        # LibDataChannel::LibDataChannel
+        # sioclient::sioclient_tls
+        # OpenSSL::SSL
+        # nlohmann_json::nlohmann_json      
+    ) 
+target_compile_options(program PUBLIC -Wall -Werror)
