@@ -36,10 +36,12 @@ int main(int argc, char *argv[])
         // cout << "loop" << endl;
         if (portalRTC.getChannelStatus())
         {
+
+            // pass by reference
             auto [rgb, depth, quaternion] = zed.extractFrame(portalRTC.getChannelStatus());
 
-            portalRTC.sendDataToChannel("RGB", rgb);
-            portalRTC.sendDataToChannel("DEPTH", depth);
+            portalRTC.sendDataToChannel("RGB", &rgb); // pass by reference
+            portalRTC.sendDataToChannel("DEPTH", &depth);
             portalRTC.sendSensorData("SENSOR", quaternion);
         }
         else

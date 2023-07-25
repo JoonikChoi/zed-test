@@ -129,7 +129,7 @@ void RTC::sendSensorData(std::string type, std::string data)
     // }
 }
 
-void RTC::sendDataToChannel(std::string type, std::vector<unsigned char> data)
+void RTC::sendDataToChannel(std::string type, std::vector<unsigned char> *data)
 {
     if (!isChannelOpen)
         return;
@@ -139,9 +139,9 @@ void RTC::sendDataToChannel(std::string type, std::vector<unsigned char> data)
     std::transform(type.begin(), type.end(), type.begin(), ::toupper);
     if (type == "RGB")
     {
-        auto middle2 = data.begin() + data.size() / 2;
-        std::vector<unsigned char> rgbSegment_1(data.begin(), middle2);
-        std::vector<unsigned char> rgbSegment_2(middle2, data.end());
+        auto middle2 = data->begin() + data->size() / 2;
+        std::vector<unsigned char> rgbSegment_1(data->begin(), middle2);
+        std::vector<unsigned char> rgbSegment_2(middle2, data->end());
 
         datachannel->send((std::string) "RGB segment");
         datachannel->send((std::byte *)(rgbSegment_1.data()), rgbSegment_1.size());
@@ -152,14 +152,14 @@ void RTC::sendDataToChannel(std::string type, std::vector<unsigned char> data)
     }
     if (type == "DEPTH")
     {
-        const std::size_t vectorSize = data.size();
+        const std::size_t vectorSize = data->size();
         const std::size_t segmentSize = vectorSize / 3;
-        const auto firstSegmentBegin = data.begin();
+        const auto firstSegmentBegin = data->begin();
         const auto firstSegmentEnd = firstSegmentBegin + segmentSize;
         const auto secondSegmentBegin = firstSegmentEnd;
         const auto secondSegmentEnd = secondSegmentBegin + segmentSize;
         const auto thirdSegmentBegin = secondSegmentEnd;
-        const auto thirdSegmentEnd = data.end();
+        const auto thirdSegmentEnd = data->end();
 
         std::vector<unsigned char> depthSegment_1(firstSegmentBegin, firstSegmentEnd);
         std::vector<unsigned char> depthSegment_2(secondSegmentBegin, secondSegmentEnd);
@@ -192,7 +192,6 @@ shared_ptr<rtc::PeerConnection> RTC::createPeerConnection(const rtc::Configurati
             peerConnectionMap.clear();
         }
     });
-
     pc->onGatheringStateChange(
         [](rtc::PeerConnection::GatheringState state) { std::cout << "Gathering State: " << state << std::endl; });
 

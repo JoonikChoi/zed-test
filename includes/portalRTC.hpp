@@ -32,7 +32,7 @@ class RTC
     std::unordered_map<std::string, shared_ptr<rtc::PeerConnection>> getPeerConnectionMap();
     bool getChannelStatus();
 
-    void sendDataToChannel(std::string type, std::vector<unsigned char> data);
+    void sendDataToChannel(std::string type, std::vector<unsigned char> *data);
     void sendSensorData(std::string type, std::string data);
     template <class T> weak_ptr<T> make_weak_ptr(shared_ptr<T> ptr);
     shared_ptr<rtc::PeerConnection> createPeerConnection(const rtc::Configuration &config,
