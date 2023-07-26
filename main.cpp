@@ -76,13 +76,12 @@ int main(int argc, char *argv[])
 
     portal::RTC portalRTC(&comm);
 
-    // portalRTC.test();
     portalRTC.setOnSignaling();
 
     // sleep(100);
     // std::vector<unsigned char> rgb;
-    // int i = 0;
 
+#ifdef __linux
     // Save the current terminal settings
     struct termios old_tio, new_tio;
     tcgetattr(STDIN_FILENO, &old_tio);
@@ -91,6 +90,7 @@ int main(int argc, char *argv[])
 
     // Apply the new terminal settings
     tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
+#endif
 
     PrintConsole("[Notice] 'q' Press >> exit program", ForeColour::Yellow);
 
