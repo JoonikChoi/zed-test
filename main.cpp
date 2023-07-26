@@ -8,6 +8,7 @@
 #include <termios.h>
 #include <unistd.h>
 #endif
+#include <fcntl.h>
 
 using namespace std;
 
@@ -58,24 +59,24 @@ void PrintConsole(const char *lpszText, short nColor)
     std::cout << "\033[0m";
 #endif
 }
+char keyboardInput;
 
 int main(int argc, char *argv[])
 {
     // std::signal(SIGINT, handleSignal);
-    char keyboardInput;
 
     portal::Zed zed;
     zed.setResloution(1280, 720);
+    zed.setBitMode(zedMode::EIGHT);
     if (zed.startZed())
         return -1;
     cout << "Open zed, good" << endl;
 
-    portal::Comm comm("https://192.168.0.35:3333/portalComm_v0/");
+    portal::Comm comm("https://api.portal301.com/portalComm_v0/");
     comm.setOnTask();
     comm.registering();
 
     portal::RTC portalRTC(&comm);
-
     portalRTC.setOnSignaling();
 
     // sleep(100);
@@ -111,6 +112,10 @@ int main(int argc, char *argv[])
             }
         }
 #else
+        // Set STDIN_FILENO to non-blocking mode
+        int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+        fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
+
         if (read(STDIN_FILENO, &keyboardInput, 1) == 1)
         { // Read a single character
             if (keyboardInput == 'q')
@@ -127,7 +132,6 @@ int main(int argc, char *argv[])
         // cout << "loop" << endl;
         if (portalRTC.getChannelStatus())
         {
-
             // pass by reference
             auto [rgb, depth, quaternion] = zed.extractFrame(portalRTC.getChannelStatus());
 
@@ -151,6 +155,3 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
-// portal:: namespace 통일
-// rtc, comm 파일 나누기
