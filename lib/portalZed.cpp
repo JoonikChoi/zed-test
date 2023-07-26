@@ -91,7 +91,7 @@ int Zed::startZed()
         return EXIT_FAILURE;
     }
 
-    return true;
+    return false;
 }
 
 void Zed::close()
@@ -226,6 +226,7 @@ tuple<std::vector<unsigned char>, std::vector<unsigned char>, std::string> Zed::
     else
     {
         std::cout << "grap out" << std::endl;
+        return {RGBjpegBuf, byteData_Merged_depth, "NULL"};
     }
     return {RGBjpegBuf, byteData_Merged_depth, "NULL"};
 }

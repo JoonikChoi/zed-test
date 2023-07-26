@@ -34,6 +34,9 @@ class RTC
 
     void sendDataToChannel(std::string type, std::vector<unsigned char> *data);
     void sendSensorData(std::string type, std::string data);
+    // template <typename T> void RTC::send(const T &data);
+    // void RTC::send(std::string stringData);
+
     template <class T> weak_ptr<T> make_weak_ptr(shared_ptr<T> ptr);
     shared_ptr<rtc::PeerConnection> createPeerConnection(const rtc::Configuration &config,
                                                          shared_ptr<sio::socket> socket, std::string mysid,

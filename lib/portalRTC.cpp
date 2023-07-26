@@ -118,7 +118,11 @@ bool RTC::getChannelStatus()
 
 void RTC::sendSensorData(std::string type, std::string data)
 {
-    cout << "send " << type << endl;
+
+    if (!datachannel->isOpen())
+        return;
+
+    cout << "sensor send " << type << endl;
     datachannel->send((std::string) "Sensor data");
     datachannel->send(data);
 
@@ -128,6 +132,16 @@ void RTC::sendSensorData(std::string type, std::string data)
     //     datachannel->send(data);
     // }
 }
+
+// template <typename T> void RTC::send(const T &data)
+// {
+//     datachannel->send(data.data(), data.size());
+// }
+
+// void RTC::send(std::string stringData)
+// {
+//     datachannel->send(stringData);
+// }
 
 void RTC::sendDataToChannel(std::string type, std::vector<unsigned char> *data)
 {
@@ -142,6 +156,9 @@ void RTC::sendDataToChannel(std::string type, std::vector<unsigned char> *data)
         auto middle2 = data->begin() + data->size() / 2;
         std::vector<unsigned char> rgbSegment_1(data->begin(), middle2);
         std::vector<unsigned char> rgbSegment_2(middle2, data->end());
+
+        if (!datachannel->isOpen())
+            return;
 
         datachannel->send((std::string) "RGB segment");
         datachannel->send((std::byte *)(rgbSegment_1.data()), rgbSegment_1.size());
@@ -164,6 +181,9 @@ void RTC::sendDataToChannel(std::string type, std::vector<unsigned char> *data)
         std::vector<unsigned char> depthSegment_1(firstSegmentBegin, firstSegmentEnd);
         std::vector<unsigned char> depthSegment_2(secondSegmentBegin, secondSegmentEnd);
         std::vector<unsigned char> depthSegment_3(thirdSegmentBegin, thirdSegmentEnd);
+
+        if (!datachannel->isOpen())
+            return;
 
         datachannel->send((std::string) "Depth segment");
         datachannel->send((std::byte *)(depthSegment_1.data()), depthSegment_1.size());
