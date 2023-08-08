@@ -72,15 +72,13 @@ int main(int argc, char *argv[])
         return -1;
     cout << "Open zed, good" << endl;
 
-    portal::Comm comm("https://api.portal301.com/portalComm_v0/");
+    portal::Comm comm("https:/192.168.0.35:3333/portalComm_v0/");
+
     comm.setOnTask();
     comm.registering();
 
     portal::RTC portalRTC(&comm);
     portalRTC.setOnSignaling();
-
-    // sleep(100);
-    // std::vector<unsigned char> rgb;
 
 #ifdef __linux
     // Save the current terminal settings
@@ -149,7 +147,6 @@ int main(int argc, char *argv[])
         {
             // cout << "channel not opened" << endl;
         }
-        // sleep(0.2);
     }
     zed.close();
 
