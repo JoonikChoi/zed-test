@@ -14,6 +14,7 @@ FetchContent_MakeAvailable(json)
 find_package(LibDataChannel REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(sioclient REQUIRED)
+find_package(Threads REQUIRED)
 
 add_library(portalrtc portalRTC.cpp)
 target_include_directories(portalrtc PUBLIC ${CMAKE_SOURCE_DIR}/includes)
@@ -35,6 +36,7 @@ target_link_libraries(portalcomm
         nlohmann_json::nlohmann_json
         OpenSSL::SSL
         sioclient::sioclient_tls
+        Threads::Threads
 )
 ###############################
 
