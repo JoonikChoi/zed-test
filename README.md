@@ -11,7 +11,7 @@ extract Frame using zed sdk and opencv.
 use libdatachannel library.
 
 # main.cpp process
-1. conneting signaling server
+1. conneting to signaling server
 2. Setup Zed Camera
 3. Waiting for webrtc connection request
 4. When it's connected, extract frame from zed camera and send frame data using datachannel.
