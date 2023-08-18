@@ -60,11 +60,11 @@ void PrintConsole(const char* lpszText, short nColor)
 #endif
 }
 char keyboardInput;
+char userInput;
 
 int main(int argc, char* argv[])
 {
     // std::signal(SIGINT, handleSignal);
-    char userInput;
 
     portal::Zed zed;
     zed.setResloution(1280, 720);
