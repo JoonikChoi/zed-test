@@ -31,16 +31,14 @@ use libdatachannel library.
 
 ### build in Windows:64 with msvc (visual studio)
 1. You should use vcpkg. open terminal and write command like this :
-<pre>
-<code>
+```console
 vcpkg install opencv:x64-windows    
 vcpkg install nlohmann-json:x64-windows     
 vcpkg install libdatachannel:x64-windows    
 vcpkg install rapidjson:x64-windows     
 vcpkg install socket-io-client:x64-windows
 vcpkg integrate install
-</pre>
-</code>
-2. 반드시 vcpkg > lib 폴더로 가서 sioclient_tls.lib 을 sioclient.lib으로 이름변경해야 함. 기존 파일은 sioclient0.h로 변경(버그로 인해 mvsc가 sioclient.tls lib파일을 인식하지 못함. 이를 수동으로 해결)
-3. Build with msvc in Visual Studio (setting : x64, release)
-4. PORTAL301_ZED_Application 를 시작 프로젝트로 설정
+```
+2. 반드시 vcpkg > lib 폴더로 가서 sioclient_tls.lib 을 sioclient.lib으로 이름변경해야 함. 기존 파일은 sioclient0.h로 변경(버그로 인해 mvsc가 sioclient.tls lib파일을 인식하지 못함. 이를 수동으로 해결)     
+3. Build with msvc in Visual Studio (setting : x64, release)    
+4. PORTAL301_ZED_Application 를 시작 프로젝트로 설정    
