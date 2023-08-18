@@ -57,7 +57,7 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio")
         "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.7/lib/x64/cudart.lib"
     )
 else()
-	message("build for gcc/g++ and make")
+    message("build for gcc/g++ and make")
     add_executable(program main.cpp)
     add_subdirectory(lib)
 
