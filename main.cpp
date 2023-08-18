@@ -40,7 +40,7 @@ enum ForeColour
 };
 #endif
 
-void PrintConsole(const char *lpszText, short nColor)
+void PrintConsole(const char* lpszText, short nColor)
 {
 #ifdef _WIN32
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -61,9 +61,10 @@ void PrintConsole(const char *lpszText, short nColor)
 }
 char keyboardInput;
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     // std::signal(SIGINT, handleSignal);
+    char userInput;
 
     portal::Zed zed;
     zed.setResloution(1280, 720);
@@ -72,13 +73,65 @@ int main(int argc, char *argv[])
         return -1;
     cout << "Open zed, good" << endl;
 
-    portal::Comm comm("https:/192.168.0.35:3333/portalComm_v0/");
+   
+    portal::Comm comm("https://api.portal301.com/portalComm_v0/");
+    //portal::Comm comm("https://192.168.0.29:3333/portalComm_v0/");
 
     comm.setOnTask();
     comm.registering();
 
+    comm.io.socket()->on("zed:command", [&zed](sio::event& ev) {
+        cout << "[ event Name ] " << ev.get_name() << endl;
+        if (ev.get_messages().at(0)->get_map().find("targetSetting") != ev.get_messages().at(0)->get_map().end())
+        {
+            string targetSetting = ev.get_messages().at(0)->get_map()["targetSetting"]->get_string();
+
+            if (targetSetting == "distance-max") {
+                double value = ev.get_messages().at(0)->get_map()["value"]->get_double();
+                cout << "value : " << value << endl;
+
+                cout << "set Distance ..." << endl;
+                if (zed.getMinDistance() >= value) {
+                    cout << "Invalid Value(minValue > maxValue)" << zed.getMinDistance() << zed.getMaxDistance() << endl;
+                    return;
+                }
+
+                if (value > 20.0 || value < 1.0) {
+                    cout << "Invalid Value in ZED Max Distance" << endl;
+                    return;
+                }
+                cout << "set..." << endl;
+                zed.setMaxDistance((float)value);
+            }
+            else if (targetSetting == "distance-min") {
+                double value = ev.get_messages().at(0)->get_map()["value"]->get_double();
+                cout << "value : " << value << endl;
+
+                if (zed.getMaxDistance() <= value) {
+                    cout << "Invalid Value(minValue > maxValue)" << zed.getMinDistance() << zed.getMaxDistance() << endl;
+                    return;
+                }
+                if (value < 0.2) {
+                    cout << "Invalid Value in ZED Min Distance" << endl;
+                    return;
+                }
+                zed.setMinDistance((float)value);
+
+            }
+            else if (targetSetting == "bit") {
+                double value = ev.get_messages().at(0)->get_map()["value"]->get_int();
+
+                if ((int)value == 8) zed.setBitMode(zedMode::EIGHT);
+                else if ((int)value == 12) zed.setBitMode(zedMode::TWELVE);
+                else cout << "Invalid Value in zed Bit Mode" << endl;
+            }
+        }
+    });
+
     portal::RTC portalRTC(&comm);
     portalRTC.setOnSignaling();
+
+    //zed.datachannel = portalRTC.getChannel();
 
 #ifdef __linux
     // Save the current terminal settings
@@ -92,21 +145,17 @@ int main(int argc, char *argv[])
 #endif
 
     PrintConsole("[Notice] 'q' Press >> exit program", ForeColour::Yellow);
+    PrintConsole("Waiting for Connection ... ", ForeColour::Blue);
 
     while (true)
     {
 
 #ifdef _WIN32
-        while (true)
-        {
-            if (_kbhit())
-            {
-                keyboardInput = _getch();
-                if (keyboardInput == 'q' || keyboardInput == 27)
-                {
-                    std::cout << "Exiting the program...\n";
-                    break;
-                }
+        if (_kbhit()) {
+            userInput = _getch();
+            if (userInput == 'q') {
+                cout << "exit..." << endl;
+                break;
             }
         }
 #else
@@ -139,9 +188,14 @@ int main(int argc, char *argv[])
                 break;
             }
 
+            if (portalRTC.getChannelBufferedAmount() != 0) {
+                //cout << "[Buffered Amount : " << portalRTC.getChannelBufferedAmount() << "] Do not Send Data" << endl;
+                continue;
+            }
+
             portalRTC.sendDataToChannel("RGB", &rgb); // pass by reference
             portalRTC.sendDataToChannel("DEPTH", &depth);
-            portalRTC.sendSensorData("SENSOR", quaternion);
+            portalRTC.sendDataToChannel("SENSOR", quaternion);
         }
         else
         {

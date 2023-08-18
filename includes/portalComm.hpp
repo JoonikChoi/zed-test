@@ -12,23 +12,23 @@ using std::shared_ptr;
 
 namespace portal
 {
-class Comm
-{
+    class Comm
+    {
 
-  private:
-    std::string taskName = "portalCam__0";
-    std::string sid = "";
-    bool connectionTriggerOnce = false;
+    private:
+        std::string taskName = "portalCam__0";
+        std::string sid = "";
+        bool connectionTriggerOnce = false;
 
-  public:
-    sio::client io;
+    public:
+        sio::client io;
 
-    Comm(string serverURL);
+        Comm(string serverURL);
 
-    std::string getSid();
-    void setOnTask();
-    void registering();
-};
+        std::string getSid();
+        void setOnTask();
+        void registering();
+    };
 } // namespace portal
 
 #endif
