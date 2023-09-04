@@ -3,11 +3,14 @@ if (CMAKE_GENERATOR MATCHES "Visual Studio")
     add_library(portalZed portalZed.cpp)
     add_library(portalComm portalComm.cpp)
     add_library(portalRTC portalRTC.cpp)
+    add_library(poGst poGst.cpp)
 
     # Set include directories for the libraries
     target_include_directories(portalZed PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
     target_include_directories(portalComm PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
     target_include_directories(portalRTC PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    target_include_directories(poGst PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
 else()
     cmake_minimum_required(VERSION 3.22)
 

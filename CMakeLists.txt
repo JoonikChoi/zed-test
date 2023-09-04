@@ -42,7 +42,7 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio")
     # target_link_libraries(PORTAL301_ZED_Application PRIVATE your_required_package1::your_required_package1 your_required_package2::your_required_package2)
 
     # Link against the libraries you built in the lib directory
-    target_link_libraries(PORTAL301_ZED_Application PRIVATE portalZed portalComm portalRTC)
+    target_link_libraries(PORTAL301_ZED_Application PRIVATE portalZed portalComm portalRTC poGst)
 
     # Set linker options
     target_link_directories(PORTAL301_ZED_Application PRIVATE

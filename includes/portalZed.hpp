@@ -48,7 +48,7 @@ namespace portal
         float getMaxDistance();
         void setMinDistance(float distance);
         float getMinDistance();
-        tuple<std::vector<unsigned char>, std::vector<unsigned char>, std::string> extractFrame(bool status);
+        tuple<cv::Mat, std::vector<unsigned char>, std::string> extractFrame(bool status);
     };
 } // namespace portal
 #endif

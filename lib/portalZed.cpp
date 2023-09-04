@@ -132,7 +132,7 @@ namespace portal
 
 
 
-    tuple<std::vector<unsigned char>, std::vector<unsigned char>, std::string> Zed::extractFrame(bool status)
+    tuple<cv::Mat, std::vector<unsigned char>, std::string> Zed::extractFrame(bool status)
     {
         std::vector<unsigned char> RGBjpegBuf;
         std::vector<unsigned char> byteData_Merged_depth;
@@ -189,7 +189,7 @@ namespace portal
             else if (bitMode == zedMode::EIGHT)
             {
                 
-                cout << this->maxDistance << endl;
+                //cout << this->maxDistance << endl;
                 cvMat_processing_depth = (cvMat_depth); // 4m, 8bit
                 cv::threshold(cvMat_processing_depth, cvMat_processing_depth, (double)this->minDistance, 0.0, cv::THRESH_TOZERO);
                 cvMat_processing_depth = (cvMat_processing_depth / this->maxDistance) * 255.0;
@@ -244,14 +244,14 @@ namespace portal
                 cv::imencode(".png", cvMat_merged_depth, byteData_Merged_depth);
                 cv::imencode(".jpg", cvMat_RGB, RGBjpegBuf, comp);
 
-                return { RGBjpegBuf, byteData_Merged_depth, quaternion.dump() };
+                return { cvMat_RGB, byteData_Merged_depth, quaternion.dump() };
             }
         }
         else
         {
             std::cout << "[ZED] GRAP OUT" << std::endl;
-            return { RGBjpegBuf, byteData_Merged_depth, "NULL" };
+            return { cvMat_RGB, byteData_Merged_depth, "NULL" };
         }
-        return { RGBjpegBuf, byteData_Merged_depth, "NULL" };
+        return { cvMat_RGB, byteData_Merged_depth, "NULL" };
     }
 } // namespace portal

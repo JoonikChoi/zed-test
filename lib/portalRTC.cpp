@@ -5,15 +5,71 @@ namespace portal
     RTC::RTC(portal::Comm* comm)
     {
         this->comm = comm;
-        cout << "RTC constructor" << endl;
+        std::cout << "RTC InitLogger ON" << std::endl;
+        rtc::InitLogger(rtc::LogLevel::Debug);
     }
 
-    void RTC::test() const
-    {
-        cout << "RTC class test" << endl;
+    void RTC::receiveThread() {
+        const int BUFFER_SIZE = 2048;
+        const rtc::SSRC ssrc = 42;
+
+        SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
+        struct sockaddr_in addr = {};
+        addr.sin_family = AF_INET;
+        addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+        addr.sin_port = htons(5555);
+
+        if (bind(sock, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr)) < 0)
+            throw std::runtime_error("Failed to bind UDP socket on 127.0.0.1:5555");
+        else
+            std::cout << "Successful to bind UDP socket on 127.0.0.1:5555" << std::endl;
+
+
+        int rcvBufSize = 212992;
+        setsockopt(sock, SOL_SOCKET, SO_RCVBUF, reinterpret_cast<const char*>(&rcvBufSize),
+            sizeof(rcvBufSize));
+
+        // Receive from UDP
+        char buffer[BUFFER_SIZE];
+        int len;
+
+        while ((len = recv(sock, buffer, BUFFER_SIZE, 0)) >= 0) {
+            
+            if (!track) { // if pointer is null, it return false.
+                // pointer is NOT exist case.
+                // std::cout << "Track Not Init" << std::endl;
+                continue;
+            }
+            
+            if (len < sizeof(rtc::RtpHeader) || !track->isOpen()) {
+                // std::cout << "Track len, isOpen " << len << track->isOpen() << std::endl;
+                continue;
+            }
+            try {
+                auto rtp = reinterpret_cast<rtc::RtpHeader*>(buffer);
+                rtp->setSsrc(ssrc);
+
+                track->send(reinterpret_cast<const std::byte*>(buffer), len);
+                // std::cout << "send ... " << std::endl;
+            }
+            catch (const std::exception& e) {
+                std::cerr << "Error: " << e.what() << std::endl;
+            }
+        }
     }
 
-    template <class T> weak_ptr<T> RTC::make_weak_ptr(shared_ptr<T> ptr)
+    void RTC::startThread() {
+        std::thread recvThrd(std::bind(&RTC::receiveThread, this));
+        recvThrd.detach();
+        //thread_ = &recvThrd;
+        //thread_ = std::thread([=] () mutable {this->receiveThread(); });
+    }
+    void RTC::detachThread() {
+        //thread_->detach();
+    }
+
+
+    template <class T> std::weak_ptr<T> RTC::make_weak_ptr(shared_ptr<T> ptr)
     {
         return ptr;
     }
@@ -23,17 +79,18 @@ namespace portal
         comm->io.socket()->on("webrtc:connection request", [this](const std::string& name, const sio::message::ptr& data,
             bool isAck, sio::message::list& ack_resp) {
                 std::cout << "connection request! " << std::endl;
-                string eventName = name;
-                string packet = std::static_pointer_cast<sio::string_message>(data)->get_string();
-                cout << "event Name :" << eventName << "\nPacket :" << packet << " .. " << endl;
+                std::string eventName = name;
+                std::string packet = std::static_pointer_cast<sio::string_message>(data)->get_string();
+                std::cout << "event Name :" << eventName << "\nPacket :" << packet << " .. " << std::endl;
                 // json message = json::parse((data)->get_string());
-                string targetId = (data)->get_string();
+                std::string targetId = (data)->get_string();
 
                 // MaybeStart() //
                 rtc::Configuration config;
                 std::string stunServer = "stun:stun.l.google:19302";
                 config.iceServers.emplace_back(stunServer);
-                this->test();
+                //config.forceMediaTransport = true;
+
                 this->setPeerConnectionMap(comm->getSid(),
                     createPeerConnection(config, comm->io.socket(), comm->getSid(), targetId));
 
@@ -54,27 +111,27 @@ namespace portal
         // it is only works in release build, not debug build
         // because of assert function in 'get_map()'. commented by Joonik 23.07.24
         comm->io.socket()->on("webrtc:signaling", [this](sio::event& ev) {
-            cout << "[ event Name ] " << ev.get_name() << endl;
+            std::cout << "[ event Name ] " << ev.get_name() << std::endl;
 
-            string senderId = "NULL";
-            string description_sdp = "NULL";
-            string description_type = "NULL";
-            string candidate = "NULL";
+            std::string senderId = "NULL";
+            std::string description_sdp = "NULL";
+            std::string description_type = "NULL";
+            std::string candidate = "NULL";
 
             if (ev.get_messages().at(1)->get_map().find("sdp") != ev.get_messages().at(1)->get_map().end())
             {
                 description_sdp = ev.get_messages().at(1)->get_map()["sdp"]->get_string();
                 description_type = ev.get_messages().at(1)->get_map()["type"]->get_string();
-                cout << "[GET " << description_type << "] " << endl << description_sdp << endl;
+                std::cout << "[GET " << description_type << "] " << std::endl << description_sdp << std::endl;
                 if (description_type == "offer")
                 {
-                    cout << "ignore getting offer" << endl;
+                    std::cout << "ignore getting offer" << std::endl;
                     return;
                 }
             }
             else if (ev.get_messages().at(2)->get_map().find("candidate") != ev.get_messages().at(2)->get_map().end())
             {
-                cout << "[GET candidate] " << candidate << endl;
+                std::cout << "[GET candidate] " << candidate << std::endl;
                 candidate = ev.get_messages().at(2)->get_map()["candidate"]->get_string();
                 // string mid = ev.get_messages().at(2)->get_map()["mid"]->get_string();
                 // cout << "mid :" << mid << endl;
@@ -82,17 +139,17 @@ namespace portal
             }
             else
             {
-                cout << "something wrong" << endl;
+                std::cout << "something wrong" << std::endl;
             }
 
             if (description_sdp != "NULL")
             {
-                cout << "[SET received description]" << endl;
+                std::cout << "[SET received description]" << std::endl;
                 this->pc->setRemoteDescription(rtc::Description(description_sdp, description_type));
             }
             if (candidate != "NULL")
             {
-                cout << "[SET received candaite]" << endl;
+                std::cout << "[SET received candaite]" << std::endl;
                 pc->addRemoteCandidate(rtc::Candidate(candidate));
                 // cout << "something wrong 2" << candidate << endl;
                 // pc->addRemoteCandidate(rtc::Candidate(candidate, mid));
@@ -148,7 +205,7 @@ namespace portal
             return;
 
         if (datachannel->bufferedAmount() != 0) {
-            cout << "Buffered Amount : " << datachannel->bufferedAmount() << endl;
+            //std::cout << "Buffered Amount : " << datachannel->bufferedAmount() << std::endl;
             return;
         }
 
@@ -170,7 +227,7 @@ namespace portal
             datachannel->send((std::string)"RGB segment");
             datachannel->send((std::byte*)(rgbSegment_2.data()), rgbSegment_2.size());
             datachannel->send((std::string)"RGB-gathering-done");
-            cout << rgbSegment_1.size() << "*2" << endl;
+            //std::cout << rgbSegment_1.size() << "*2" << std::endl;
         }
         if (type == "DEPTH")
         {
@@ -198,7 +255,7 @@ namespace portal
             datachannel->send((std::byte*)(depthSegment_3.data()), depthSegment_3.size());
             datachannel->send((std::string)"Depth-gathering-done");
             datachannel->send((std::string)"Sensor data");
-            cout << depthSegment_3.size() << "*3" << endl;
+            //std::cout << depthSegment_3.size() << "*3" << std::endl;
         }
         // cout << "Send Done, Data - Frame" << endl;
     }
@@ -208,26 +265,80 @@ namespace portal
         std::string target_sid)
     {
         auto pc = std::make_shared<rtc::PeerConnection>(config);
+        const rtc::SSRC ssrc = 42;
+        rtc::Description::Video media("video", rtc::Description::Direction::SendRecv);
+        media.addH264Codec(96); // Must match the payload type of the external h264 RTP stream
+        media.addSSRC(ssrc, "video-send");
+        media.setBitrate(1000);
+
+        track = pc->addTrack(media);
+
+        track->onOpen([this]() {
+            if (track->isOpen())
+            {
+                std::cout << "Track is open" << std::endl;
+                //this->startThread();
+                //this->detachThread();
+            }
+            else
+            {
+                std::cout << "Track is not open" << std::endl;
+            }
+            });
+        
 
         pc->onStateChange([this](rtc::PeerConnection::State state) {
             std::cout << "State: " << state << std::endl;
             if (state == rtc::PeerConnection::State::Closed || state == rtc::PeerConnection::State::Failed)
             {
-                cout << "webRTC connection is Closed or Failed \nClear peerConnectionMap ..." << endl;
+                std::cout << "webRTC connection is Closed or Failed \nClear peerConnectionMap ..." << std::endl;
                 isChannelOpen = false;
                 peerConnectionMap.clear();
             }
             });
-        pc->onGatheringStateChange(
-            [](rtc::PeerConnection::GatheringState state) { std::cout << "Gathering State: " << state << std::endl; });
 
+        pc->onGatheringStateChange(
+            [this, pc, socket, target_sid, mysid](rtc::PeerConnection::GatheringState state) {
+                std::cout << "Gathering State: " << state << std::endl;
+                if (state == rtc::PeerConnection::GatheringState::Complete) {
+                    /*
+                    auto description = pc->localDescription();
+                    json message = { {"type", description->typeString()},
+                                    {"sdp", std::string(description.value())} };
+                    std::cout << message << std::endl;
+
+                    json description_json = { {"type", description->typeString()}, {"sdp", std::string(description.value())} };
+
+                    sio::message::list arguments;
+                    arguments.push(target_sid);
+                    arguments.push(mysid);
+                    arguments.push(description_json.dump());
+
+                    socket->emit("webrtc:signaling", arguments);
+
+                    
+                    //this->candidate_json = { {"candidate", std::string(candidate)}, {"sdpMid", candidate.mid()} };
+
+                    sio::message::list arguments2;
+                    arguments2.push(target_sid);
+                    arguments2.push(mysid);
+                    arguments2.push("undefined");
+                    arguments2.push(this->candidate_json.dump());
+
+                    socket->emit("webrtc:signaling", arguments2);
+                    */
+                }
+                
+            });
+
+        
         pc->onLocalDescription([socket, mysid, target_sid](rtc::Description description) {
-            cout << " =========== Set LocalDescription... ===========" << endl;
-            cout << " target_sid : " << target_sid << endl;
-            cout << " mysid : " << mysid << endl;
-            cout << " type : " << description.typeString() << endl;
-            cout << " sdp : " << std::string(description) << endl;
-            cout << " =========== ======================= ===========" << endl;
+            std::cout << " =========== Set LocalDescription... ===========" << std::endl;
+            std::cout << " target_sid : " << target_sid << std::endl;
+            std::cout << " mysid : " << mysid << std::endl;
+            std::cout << " type : " << description.typeString() << std::endl;
+            std::cout << " sdp : " << std::string(description) << std::endl;
+            std::cout << " =========== ======================= ===========" << std::endl;
 
             json description_json = { {"type", description.typeString()}, {"sdp", std::string(description)} };
 
@@ -238,9 +349,10 @@ namespace portal
 
             socket->emit("webrtc:signaling", arguments);
             });
+        
 
-        pc->onLocalCandidate([socket, target_sid, mysid](rtc::Candidate candidate) {
-            json candidate_json = { {"candidate", std::string(candidate)}, {"sdpMid", candidate.mid()} };
+        pc->onLocalCandidate([this, socket, target_sid, mysid](rtc::Candidate candidate) {
+            this->candidate_json = { {"candidate", std::string(candidate)}, {"sdpMid", candidate.mid()} };
 
             sio::message::list arguments;
             arguments.push(target_sid);
@@ -249,25 +361,8 @@ namespace portal
             arguments.push(candidate_json.dump());
 
             socket->emit("webrtc:signaling", arguments);
-            });
+        });
 
-        const rtc::SSRC ssrc = 42;
-        rtc::Description::Video media("video", rtc::Description::Direction::SendRecv);
-        media.addH264Codec(96); // Must match the payload type of the external h264 RTP stream
-        media.addSSRC(ssrc, "video-send");
-        media.setBitrate(1000);
-
-        track = pc->addTrack(media);
-        track->onOpen([this]() {
-            if (track->isOpen())
-            {
-                std::cout << "track is open" << std::endl;
-            }
-            else
-            {
-                std::cout << "track is not open" << std::endl;
-            }
-            });
 
         auto dc = pc->createDataChannel("datachannel");
 
@@ -298,6 +393,7 @@ namespace portal
         // 수정 필요
         dataChannelMap.emplace(mysid, dc);
         this->datachannel = dataChannelMap.find(mysid)->second;
+
         return pc;
     };
 } // namespace portal

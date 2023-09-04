@@ -6,7 +6,6 @@
 #include <iostream>
 #include <thread>
 
-using namespace std;
 using json = nlohmann::json;
 using std::shared_ptr;
 
@@ -23,7 +22,7 @@ namespace portal
     public:
         sio::client io;
 
-        Comm(string serverURL);
+        Comm(std::string serverURL);
 
         std::string getSid();
         void setOnTask();
