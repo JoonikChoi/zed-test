@@ -82,7 +82,30 @@ int main(int argc, char* argv[])
 
    
     //portal::Comm comm("https://api.portal301.com/portalComm_v0/");
-    portal::Comm comm("https://192.168.0.35:3333/portalComm_v0/");
+    portal::Comm comm("https://192.168.0.35:3333/portalComm_v0.1/");
+
+    portal::Profile profile = {
+        "SN000-FAKE-3566",
+        "J-test0",       // alias
+        "camera",        // type
+        "no authLevel",  // authLevel
+        "no-master",     // status
+        "no location",   // location
+        "no createdAt",  // createdAt
+        "no descriptions", // descriptions
+        "no vender",     // vender
+        {}               // apps (empty vector)
+    };
+
+    comm.setProfile(profile);
+    //comm.fetchAPI((const char*)"https://api.portal301.com");
+    // curl은 C라이브러리라서 url을 const char* 형식으로 전달해야함.
+    bool resAPI = comm.createModule((const char*)"https://192.168.0.35:3333/fetch/v0.1/module/register");
+    if (!resAPI) {
+        std::cout << "API fetch failed." << std::endl;
+        return -1;
+    }
+    comm.connectModule();
 
     comm.setOnTask();
     comm.registering();
