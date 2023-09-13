@@ -54,3 +54,5 @@ _WINDOWS
 NDEBUG
 CMAKE_INTDIR="Release"
 ```
+
+프로젝트 상단 탭의 보기->다른 창->속성관리자 에서 gstreamer 속성 시트 추가
