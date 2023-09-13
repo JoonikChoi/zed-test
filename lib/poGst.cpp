@@ -38,14 +38,20 @@ bool poGst::setElements()
     }
 
     /* Set appsrc & udpsink properties */
-    g_object_set(data.app_source, "format", GST_FORMAT_TIME, NULL);
-    g_object_set(data.x264enc, "bitrate", 1000, "key-int-max", 30, NULL); //zero-latency
+    // g_object_set(data.app_source, "format", GST_FORMAT_TIME, NULL);
+    // Set appsrc properties
+    g_object_set(data.app_source, "format", GST_FORMAT_TIME, "is-live", TRUE, "block", TRUE, NULL);
+    //g_object_set(encoder, "framerate", "30/1", NULL);
+    // g_object_set(data.x264enc, "bitrate", 1000, "key-int-max", 30, NULL);
+    // g_object_set(encoder, "qp-min", 20, NULL); // Set a minimum QP value
     // g_object_set(data.x264enc, "key-int-max", 30, NULL); //zero-latency
     g_object_set(data.rtph264pay, "pt", 96, "mtu", 1200, NULL);
+    g_object_set(data.udpsink, "host", "127.0.0.1", "port", 4444, NULL);
+    g_object_set(data.x264enc, "tune", 0x00000004, NULL);
 
     // g_object_set(data.rtph264pay, "aggregate-mode", 1, NULL);
 
-    //g_object_set(data.x264enc, "tune", "zerolatency", NULL);
+    // g_object_set(data.x264enc, "tune", 0x00000004, NULL);
     /*
     g_object_set(data.x264enc, "bitrate", 3000, NULL);
     g_object_set(data.x264enc, "key-int-max", 30, NULL);
@@ -55,7 +61,6 @@ bool poGst::setElements()
     g_object_set(data.rtph264pay, "pt", 96, NULL);
     g_object_set(data.rtph264pay, "mtu", 2000, NULL);
     */
-    g_object_set(data.udpsink, "host", "127.0.0.1", "port", 4444, "buffer-size", 1200, NULL);
 
     /* Set appsrc caps(based on your input format) */
     GstCaps* caps = gst_caps_new_simple("video/x-raw",
@@ -109,6 +114,10 @@ bool poGst::setElements()
     /* Free resources */
     gst_element_set_state(data.pipeline, GST_STATE_NULL);
     gst_object_unref(data.pipeline);
+
+    // gst.data.rgb = &rgb;
+    // 
+    // portalRTC.sendDataToChannel("RGB", &rgb);
 
     return true;
 }

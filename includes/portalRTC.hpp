@@ -23,40 +23,55 @@ using std::shared_ptr;
 
 namespace portal
 {
+
+    struct PeerInfo {
+        shared_ptr<rtc::PeerConnection> pc;
+        std::shared_ptr<rtc::DataChannel> dataChannel;
+        shared_ptr<rtc::Track> track;
+        bool connectionActive;
+        bool channelActive;
+        bool trackActive;
+
+        PeerInfo() {
+            this->pc = NULL;
+            this->dataChannel = NULL;
+            this->track = NULL;
+            this->connectionActive = false;
+            this->channelActive = false;
+            this->trackActive = false;
+        }
+        //PeerInfo(shared_ptr<rtc::PeerConnection> pc, std::shared_ptr<rtc::DataChannel> channel, shared_ptr<rtc::Track>, bool connectionActive, bool channelActive, bool trackActive)
+          //  : pc(pc), dataChannel(channel), track(track), connectionActive(connectionActive), channelActive(channelActive) ,trackActive(trackActive) {}
+    };
+
+
     class RTC
     {
         portal::Comm* comm;
-        bool isChannelOpen = false;
-        std::unordered_map<std::string, shared_ptr<rtc::PeerConnection>> peerConnectionMap;
-        std::unordered_map<std::string, shared_ptr<rtc::DataChannel>> dataChannelMap;
-        shared_ptr<rtc::DataChannel> datachannel;
-        json candidate_json;
-        std::thread *thread_;
+        rtc::Configuration config;
+        std::unordered_map<std::string, PeerInfo> PeerMap;
+
+        // std::unordered_map<std::string, shared_ptr<rtc::PeerConnection>> peerConnectionMap;
+        // std::unordered_map<std::string, shared_ptr<rtc::DataChannel>, bool> dataChannelMap; // clientID, datachannel, isChannelOpen
+        // std::unordered_map<std::string, shared_ptr<rtc::Track>> trackMap;
+        // shared_ptr<rtc::DataChannel> datachannel;
+        // json candidate_json;
 
     public:
         RTC(portal::Comm* comm);
-        shared_ptr<rtc::Track> track = NULL;
-
-        shared_ptr<rtc::PeerConnection> pc;
 
         void setOnSignaling();
-
-        void setPeerConnectionMap(std::string sid, shared_ptr<rtc::PeerConnection> pc);
-        std::unordered_map<std::string, shared_ptr<rtc::PeerConnection>> getPeerConnectionMap();
-        bool getChannelStatus();
-        size_t getChannelBufferedAmount();
+        bool areAnyChannelsOpen();
+        
 
         void sendDataToChannel(std::string type, std::vector<unsigned char> *data);
         void sendDataToChannel(std::string type, std::string data);
         template <class T> std::weak_ptr<T> make_weak_ptr(shared_ptr<T> ptr);
-        shared_ptr<rtc::PeerConnection> createPeerConnection(const rtc::Configuration& config,
-            shared_ptr<sio::socket> socket, std::string mysid,
-            std::string target_sid);
+        shared_ptr<rtc::PeerConnection> createPeerConnection(
+            shared_ptr<sio::socket> socket, std::string clientID);
 
 
         void receiveThread();
-        void startThread();
-        void detachThread();
     };
 } // namespace portal
 

@@ -29,6 +29,10 @@ namespace portal
     {
         this->profile = profile;
     }
+    
+    Profile Comm::getProfile() {
+        return this->profile;
+    }
 
     std::string Comm::getSid()
     {
@@ -154,7 +158,20 @@ namespace portal
                     std::cout << "this->sid : " << this->sid << std::endl;
                     this->connectionTriggerOnce = true;
                 });
-            });
+
+            if (this->reconnected) {
+                std::cout << "Reconnected Successfully, Connect Module." << std::endl;
+                this->connectModule();
+                this->reconnected = false;
+            }
+
+        });
+
+        this->io.set_reconnecting_listener([&]() {
+            std::cout << "Connected Failed. Try to Reconnecting ..." << std::endl;
+            this->reconnected = true;
+        });
+
     }
 
     void Comm::registering()

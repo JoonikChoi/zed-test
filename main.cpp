@@ -76,13 +76,15 @@ int main(int argc, char* argv[])
     portal::Zed zed;
     zed.setResloution(1280, 720);
     zed.setBitMode(zedMode::EIGHT);
+    
     if (zed.startZed())
         return -1;
     cout << "Open zed, good" << endl;
+    
 
    
-    //portal::Comm comm("https://api.portal301.com/portalComm_v0/");
-    portal::Comm comm("https://192.168.0.35:3333/portalComm_v0.1/");
+    portal::Comm comm("https://api.portal301.com/portalComm_v0.1/");
+    // portal::Comm comm("https://192.168.0.35:3333/portalComm_v0.1/");
 
     portal::Profile profile = {
         "SN000-FAKE-3566",
@@ -100,7 +102,8 @@ int main(int argc, char* argv[])
     comm.setProfile(profile);
     //comm.fetchAPI((const char*)"https://api.portal301.com");
     // curl은 C라이브러리라서 url을 const char* 형식으로 전달해야함.
-    bool resAPI = comm.createModule((const char*)"https://192.168.0.35:3333/fetch/v0.1/module/register");
+    bool resAPI = comm.createModule((const char*)"https://api.portal301.com/fetch/v0.1/module/register");
+    // bool resAPI = comm.createModule((const char*)"https://192.168.0.35/fetch/v0.1/module/register");
     if (!resAPI) {
         std::cout << "API fetch failed." << std::endl;
         return -1;
@@ -160,13 +163,13 @@ int main(int argc, char* argv[])
     portal::RTC portalRTC(&comm);
     portalRTC.setOnSignaling();
 
+    
+    /*
     thread thread3 = thread(&portal::RTC::receiveThread, &portalRTC);
     thread3.detach();
-    //portalRTC.startThread();
-    //portalRTC.detachThread();
-    //poGst gst(&zed, &portalRTC);
-    //gst.setElements();
-    
+    poGst gst(&zed, &portalRTC);
+    gst.setElements();
+    */
 
     int controlFlag = 0;
 
@@ -214,16 +217,18 @@ int main(int argc, char* argv[])
 #endif
         
         // cout << "loop" << endl;
-        if (portalRTC.getChannelStatus())
+        if (portalRTC.areAnyChannelsOpen())
         {
+            
             if (controlFlag == 0) {
-                //thread thread3 = thread(&portal::RTC::receiveThread, portalRTC);
-                //thread3.detach();
+                thread thread3 = thread(&portal::RTC::receiveThread, &portalRTC);
+                thread3.detach();
                 controlFlag = 1;
             }
 
+            
             // pass by reference
-            auto [rgb, depth, quaternion] = zed.extractFrame(portalRTC.getChannelStatus());
+            auto [rgb, depth, quaternion] = zed.extractFrame();
 
             if (quaternion == "NULL")
             {
@@ -231,14 +236,7 @@ int main(int argc, char* argv[])
                 break;
             }
 
-            if (portalRTC.getChannelBufferedAmount() != 0) {
-                cout << "[Buffered Amount : " << portalRTC.getChannelBufferedAmount() << "] Do not Send Data" << endl;
-                continue;
-            }
-
-            // gst.data.rgb = &rgb;
-            // 
-            // portalRTC.sendDataToChannel("RGB", &rgb);
+            portalRTC.sendDataToChannel("RGB", &rgb);
             portalRTC.sendDataToChannel("DEPTH", &depth);
             portalRTC.sendDataToChannel("SENSOR", quaternion);
             

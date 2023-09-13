@@ -56,7 +56,7 @@ public:
         int height = 720;
 
         
-        auto [rgb, depth, quaternion] = data->zed->extractFrame(true);
+        auto [rgb, depth, quaternion] = data->zed->extractFrame2(true);
 
         if (quaternion == "NULL")
         {
@@ -64,19 +64,25 @@ public:
             return FALSE;
         }
 
-        if (data->portalRTC->getChannelStatus())
+        if (data->portalRTC->areAnyChannelsOpen())
         {
+            data->portalRTC->sendDataToChannel("DEPTH", &depth);
+            data->portalRTC->sendDataToChannel("SENSOR", quaternion);
+
+            /*
             if (data->portalRTC->getChannelBufferedAmount() != 0) {
                 cout << "[Buffered Amount : " << data->portalRTC->getChannelBufferedAmount() << "] Do not Send Data" << endl;
             }
             else {
 
-                if (data->portalRTC->getChannelStatus())
+                if (data->portalRTC->areAnyChannelsOpen())
                 {
                     //data->portalRTC->sendDataToChannel("DEPTH", &depth);
                     //data->portalRTC->sendDataToChannel("SENSOR", quaternion);
                 }
             }
+            */
+            
         }
         
 
@@ -102,7 +108,7 @@ public:
         //cout << "22222222" << endl;
 
         cv::waitKey(1);
-
+        Sleep(50);
         /* Create a new empty buffer */
         buffer = gst_buffer_new_and_alloc(greenMatrix.total() * greenMatrix.elemSize());
 

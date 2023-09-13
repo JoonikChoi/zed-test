@@ -37,13 +37,18 @@ namespace portal
         Profile profile;
         std::string sid = "";
         bool connectionTriggerOnce = false;
+        bool reconnected = false;
         json makeJsonProfile();
+
 
     public:
         sio::client io;
 
         Comm(std::string serverURL);
-        void Comm::setProfile(Profile profile);
+        void setProfile(Profile profile);
+
+        Profile getProfile();
+
         std::string getSid();
         bool createModule(const char* url);
         void connectModule();
