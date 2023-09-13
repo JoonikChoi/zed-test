@@ -35,7 +35,7 @@ use libdatachannel library.
 vcpkg install opencv:x64-windows    
 vcpkg install nlohmann-json:x64-windows     
 vcpkg install libdatachannel[srtp]:x64-windows    
-vcpkg install rapidjson:x64-windows     
+vcpkg install curl:x64-windows     
 vcpkg install socket-io-client:x64-windows
 vcpkg integrate install
 ```
