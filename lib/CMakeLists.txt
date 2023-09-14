@@ -31,6 +31,7 @@ else()
     find_package(OpenSSL REQUIRED)
     find_package(sioclient REQUIRED)
     find_package(Threads REQUIRED)
+    find_package(CURL REQUIRED)
 
     add_library(portalrtc portalRTC.cpp)
     target_include_directories(portalrtc PUBLIC ${CMAKE_SOURCE_DIR}/includes)
@@ -42,16 +43,24 @@ else()
             nlohmann_json::nlohmann_json
     )
 
+    #######################################
+
     add_library(portalcomm portalComm.cpp)
     target_include_directories(portalcomm PUBLIC ${CMAKE_SOURCE_DIR}/includes)
     target_compile_options(portalcomm PUBLIC -Wall -Werror -fPIC)
 
+    target_include_directories(portalcomm
+    PUBLIC
+        ${CURL_INCLUDE_DIRS}
+    )
+    
     target_link_libraries(portalcomm
         PUBLIC
             nlohmann_json::nlohmann_json
             OpenSSL::SSL
             sioclient::sioclient_tls
             Threads::Threads
+            ${CURL_LIBRARIES}
     )
 
     ###############################
@@ -106,6 +115,6 @@ else()
             ${ZED_LIBS}
             ${OpenCV_LIBS}
             nlohmann_json::nlohmann_json
-        )
+    )
 
 endif()

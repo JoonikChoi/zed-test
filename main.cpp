@@ -1,6 +1,6 @@
 
-#include <gst/gst.h>
-#include "poGst.hpp"
+// #include <gst/gst.h>
+// #include "poGst.hpp"
 #include "portalComm.hpp"
 #include "portalRTC.hpp"
 #include "portalZed.hpp"
@@ -68,10 +68,12 @@ void PrintConsole(const char* lpszText, short nColor)
 #endif
 }
 char keyboardInput;
+char userInput;
 
 int main(int argc, char* argv[])
 {
-    char userInput;
+    // std::signal(SIGINT, handleSignal);
+    // char userInput;
     
     portal::Zed zed;
     zed.setResloution("HD1080");
@@ -102,7 +104,7 @@ int main(int argc, char* argv[])
 
     comm.setProfile(profile);
     //comm.fetchAPI((const char*)"https://api.portal301.com");
-    // curlÀº C¶óÀÌºê·¯¸®¶ó¼­ urlÀ» const char* Çü½ÄÀ¸·Î Àü´ÞÇØ¾ßÇÔ.
+    // curlï¿½ï¿½ Cï¿½ï¿½ï¿½Ìºê·¯ï¿½ï¿½ï¿½ï¿½ urlï¿½ï¿½ const char* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ø¾ï¿½ï¿½ï¿½.
     bool resAPI = comm.createModule((const char*)"https://api.portal301.com/fetch/v0.1/module/register");
     // bool resAPI = comm.createModule((const char*)"https://192.168.0.35/fetch/v0.1/module/register");
     if (!resAPI) {
@@ -224,9 +226,11 @@ int main(int argc, char* argv[])
         {
             
             if (controlFlag == 0) {
+                /*
                 thread thread3 = thread(&portal::RTC::receiveThread, &portalRTC);
                 thread3.detach();
                 controlFlag = 1;
+                */
             }
 
             

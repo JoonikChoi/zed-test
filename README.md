@@ -35,7 +35,7 @@ use libdatachannel library.
 vcpkg install opencv:x64-windows    
 vcpkg install nlohmann-json:x64-windows     
 vcpkg install libdatachannel[srtp]:x64-windows    
-vcpkg install rapidjson:x64-windows     
+vcpkg install curl:x64-windows     
 vcpkg install socket-io-client:x64-windows
 vcpkg integrate install
 ```
@@ -54,3 +54,5 @@ _WINDOWS
 NDEBUG
 CMAKE_INTDIR="Release"
 ```
+
+프로젝트 상단 탭의 보기->다른 창->속성관리자 에서 gstreamer 속성 시트 추가
