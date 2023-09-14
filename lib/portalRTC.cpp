@@ -20,62 +20,62 @@ namespace portal
     }
 
     void RTC::receiveThread() {
-        const int BUFFER_SIZE = 2048;
-        const rtc::SSRC ssrc = 42;
+        // const int BUFFER_SIZE = 2048;
+        // const rtc::SSRC ssrc = 42;
 
-        SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
-        struct sockaddr_in addr = {};
-        addr.sin_family = AF_INET;
-        addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-        addr.sin_port = htons(5555);
+        // SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
+        // struct sockaddr_in addr = {};
+        // addr.sin_family = AF_INET;
+        // addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+        // addr.sin_port = htons(5555);
 
-        if (bind(sock, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr)) < 0)
-            throw std::runtime_error("Failed to bind UDP socket on 127.0.0.1:5555");
-        else
-            std::cout << "Successful to bind UDP socket on 127.0.0.1:5555" << std::endl;
+        // if (bind(sock, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr)) < 0)
+        //     throw std::runtime_error("Failed to bind UDP socket on 127.0.0.1:5555");
+        // else
+        //     std::cout << "Successful to bind UDP socket on 127.0.0.1:5555" << std::endl;
 
 
-        int rcvBufSize = 212992;
-        setsockopt(sock, SOL_SOCKET, SO_RCVBUF, reinterpret_cast<const char*>(&rcvBufSize),
-            sizeof(rcvBufSize));
+        // int rcvBufSize = 212992;
+        // setsockopt(sock, SOL_SOCKET, SO_RCVBUF, reinterpret_cast<const char*>(&rcvBufSize),
+        //     sizeof(rcvBufSize));
 
-        // Receive from UDP
-        char buffer[BUFFER_SIZE];
-        int len;
+        // // Receive from UDP
+        // char buffer[BUFFER_SIZE];
+        // int len;
 
-        while ((len = recv(sock, buffer, BUFFER_SIZE, 0)) >= 0) {
+        // while ((len = recv(sock, buffer, BUFFER_SIZE, 0)) >= 0) {
             
-            for (const auto& pair : PeerMap) {
-                shared_ptr<rtc::Track> track = pair.second.track;
-                std::string clientID = pair.first;
-                if (!track) { // if pointer is null, it return false.
-                                // pointer is NOT exist case.
-                                // std::cout << "Track Not Init" << std::endl;
-                    continue;
-                }
+        //     for (const auto& pair : PeerMap) {
+        //         shared_ptr<rtc::Track> track = pair.second.track;
+        //         std::string clientID = pair.first;
+        //         if (!track) { // if pointer is null, it return false.
+        //                         // pointer is NOT exist case.
+        //                         // std::cout << "Track Not Init" << std::endl;
+        //             continue;
+        //         }
 
-                if (len < sizeof(rtc::RtpHeader) || !track->isOpen()) {
-                    // std::cout << "Track len, isOpen " << len << track->isOpen() << std::endl;
-                    continue;
-                }
-                try {
-                    auto rtp = reinterpret_cast<rtc::RtpHeader*>(buffer);
-                    rtp->setSsrc(ssrc);
+        //         if (len < sizeof(rtc::RtpHeader) || !track->isOpen()) {
+        //             // std::cout << "Track len, isOpen " << len << track->isOpen() << std::endl;
+        //             continue;
+        //         }
+        //         try {
+        //             auto rtp = reinterpret_cast<rtc::RtpHeader*>(buffer);
+        //             rtp->setSsrc(ssrc);
 
-                    if (track->bufferedAmount() != 0) {
-                        std::cout << "Client: " << clientID << ", Track BufferedAmount: " << track->bufferedAmount() << std::endl;
-                    }
-                    else {
-                        // std::cout << "track-send" << std::endl;
-                        track->send(reinterpret_cast<const std::byte*>(buffer), len);
-                    }
-                }
-                catch (const std::exception& e) {
-                    std::cerr << "Error: " << e.what() << std::endl;
-                }
-            }
+        //             if (track->bufferedAmount() != 0) {
+        //                 std::cout << "Client: " << clientID << ", Track BufferedAmount: " << track->bufferedAmount() << std::endl;
+        //             }
+        //             else {
+        //                 // std::cout << "track-send" << std::endl;
+        //                 track->send(reinterpret_cast<const std::byte*>(buffer), len);
+        //             }
+        //         }
+        //         catch (const std::exception& e) {
+        //             std::cerr << "Error: " << e.what() << std::endl;
+        //         }
+        //     }
 
-        }
+        // }
     }
 
 

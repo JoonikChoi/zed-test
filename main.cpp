@@ -1,6 +1,6 @@
 
-#include <gst/gst.h>
-#include "poGst.hpp"
+// #include <gst/gst.h>
+// #include "poGst.hpp"
 #include "portalComm.hpp"
 #include "portalRTC.hpp"
 #include "portalZed.hpp"
@@ -73,8 +73,7 @@ char userInput;
 int main(int argc, char* argv[])
 {
     // std::signal(SIGINT, handleSignal);
-
-    char userInput;
+    // char userInput;
     
     portal::Zed zed;
     zed.setResloution(1280, 720);
@@ -224,9 +223,11 @@ int main(int argc, char* argv[])
         {
             
             if (controlFlag == 0) {
+                /*
                 thread thread3 = thread(&portal::RTC::receiveThread, &portalRTC);
                 thread3.detach();
                 controlFlag = 1;
+                */
             }
 
             
