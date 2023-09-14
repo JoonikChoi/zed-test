@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
     char userInput;
     
     portal::Zed zed;
-    zed.setResloution(1280, 720);
+    zed.setResloution("HD1080");
     zed.setBitMode(zedMode::EIGHT);
     
     if (zed.startZed())
@@ -83,8 +83,9 @@ int main(int argc, char* argv[])
     
 
    
-    portal::Comm comm("https://api.portal301.com/portalComm_v0.1/");
+    // portal::Comm comm("https://api.portal301.com/portalComm_v0.1/");
     // portal::Comm comm("https://192.168.0.35:3333/portalComm_v0.1/");
+    portal::Comm comm("https://192.168.0.29:3333/portalComm_v0.1/");
 
     portal::Profile profile = {
         "SN000-FAKE-3566",
@@ -154,6 +155,8 @@ int main(int argc, char* argv[])
                 double value = ev.get_messages().at(0)->get_map()["value"]->get_int();
 
                 if ((int)value == 8) zed.setBitMode(zedMode::EIGHT);
+                else if ((int)value == 9) zed.setBitMode(zedMode::NINE);
+                else if ((int)value == 10) zed.setBitMode(zedMode::TEN);
                 else if ((int)value == 12) zed.setBitMode(zedMode::TWELVE);
                 else cout << "Invalid Value in zed Bit Mode " << endl;
             }

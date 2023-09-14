@@ -73,7 +73,7 @@ namespace portal
     Zed::Zed()
     {
         // Set configuration parameters
-        init_parameters.camera_resolution = RESOLUTION::HD720;
+        // init_parameters.camera_resolution = RESOLUTION::HD720;
         // init_parameters.depth_mode = DEPTH_MODE::ULTRA; // Use ULTRA depth mode
         init_parameters.coordinate_units = UNIT::METER; // Use millimeter units (for depth measurements)
         init_parameters.depth_mode = DEPTH_MODE::NEURAL;
@@ -100,10 +100,21 @@ namespace portal
         zed.close();
     }
 
-    void Zed::setResloution(int width, int height)
+    void Zed::setResloution(string resolution)
     {
-        this->image_size.height = height;
-        this->image_size.width = width;
+        if (resolution == "HD720")
+        {
+            this->image_size.height = 720;
+            this->image_size.width = 1280;
+            init_parameters.camera_resolution = RESOLUTION::HD720;
+
+        }
+        else if (resolution == "HD1080")
+        {
+            this->image_size.height = 1080;
+            this->image_size.width = 1920;
+            init_parameters.camera_resolution = RESOLUTION::HD1080;
+        }
     }
 
     void Zed::setBitMode(zedMode::Mode bitMode)
@@ -175,6 +186,44 @@ namespace portal
                 cv::Mat bot_mask = cv::Mat::ones(cvMat_processing_depth.size(), cvMat_processing_depth.type()) * 0x000F;
                 // 1111 = 16 = F, 0011
                 cv::Mat top = (cvMat_processing_depth & top_mask) / 16;
+                cv::Mat mid = cvMat_processing_depth & mid_mask;
+                cv::Mat bot = (cvMat_processing_depth & bot_mask) * 16;
+
+                // cout << bot << endl;
+                std::vector<cv::Mat> channels = { top, mid, bot };
+                cv::merge(channels, cvMat_merged_depth);
+                cvMat_merged_depth.convertTo(cvMat_merged_depth, CV_8UC3);
+            }
+            else if (bitMode == zedMode::NINE)
+            {
+                cvMat_processing_depth = (cvMat_depth / this->maxDistance) * 511.0; // 5m, 12bit
+                cv::threshold(cvMat_processing_depth, cvMat_processing_depth, 511.0, 0, cv::THRESH_TOZERO_INV);
+                cvMat_processing_depth.convertTo(cvMat_processing_depth, CV_16UC1);
+
+                cv::Mat top_mask = cv::Mat::ones(cvMat_processing_depth.size(), cvMat_processing_depth.type()) * 0x01C0; // 111000000
+                cv::Mat mid_mask = cv::Mat::ones(cvMat_processing_depth.size(), cvMat_processing_depth.type()) * 0x0038; // 000111000
+                cv::Mat bot_mask = cv::Mat::ones(cvMat_processing_depth.size(), cvMat_processing_depth.type()) * 0x0007; // 000000111
+                // 1111 = 16 = F, 0011
+                cv::Mat top = (cvMat_processing_depth & top_mask) / 4;
+                cv::Mat mid = cvMat_processing_depth & mid_mask / 2;
+                cv::Mat bot = (cvMat_processing_depth & bot_mask) * 16;
+
+                // cout << bot << endl;
+                std::vector<cv::Mat> channels = { top, mid, bot };
+                cv::merge(channels, cvMat_merged_depth);
+                cvMat_merged_depth.convertTo(cvMat_merged_depth, CV_8UC3);
+            }
+            else if (bitMode == zedMode::TEN)
+            {
+                cvMat_processing_depth = (cvMat_depth / this->maxDistance) * 1023.0; // 5m, 12bit
+                cv::threshold(cvMat_processing_depth, cvMat_processing_depth, 1023.0, 0, cv::THRESH_TOZERO_INV);
+                cvMat_processing_depth.convertTo(cvMat_processing_depth, CV_16UC1);
+
+                cv::Mat bot_mask = cv::Mat::ones(cvMat_processing_depth.size(), cvMat_processing_depth.type()) * 0x000F; // 00 0000 1111
+                cv::Mat mid_mask = cv::Mat::ones(cvMat_processing_depth.size(), cvMat_processing_depth.type()) * 0x0070; // 00 0111 0000
+                cv::Mat top_mask = cv::Mat::ones(cvMat_processing_depth.size(), cvMat_processing_depth.type()) * 0x0380; // 11 1000 0000
+                // 1111 = 16 = F, 0011
+                cv::Mat top = (cvMat_processing_depth & top_mask) / 8;
                 cv::Mat mid = cvMat_processing_depth & mid_mask;
                 cv::Mat bot = (cvMat_processing_depth & bot_mask) * 16;
 

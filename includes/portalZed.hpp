@@ -20,6 +20,8 @@ namespace zedMode
     enum Mode
     {
         EIGHT,
+        NINE,
+        TEN,
         TWELVE
     };
 } // namespace zedMode
@@ -42,7 +44,7 @@ namespace portal
 
         int startZed();
         void close();
-        void setResloution(int width, int height);
+        void setResloution(string resolution);
         void setBitMode(zedMode::Mode bitMode);
         void setMaxDistance(float distance);
         float getMaxDistance();
