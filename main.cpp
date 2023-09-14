@@ -1,6 +1,11 @@
+
+#include <gst/gst.h>
+#include "poGst.hpp"
 #include "portalComm.hpp"
 #include "portalRTC.hpp"
 #include "portalZed.hpp"
+#include <thread>
+
 #ifdef _WIN32
 #include <conio.h>
 #include <windows.h>
@@ -11,6 +16,9 @@
 #include <fcntl.h>
 
 using namespace std;
+
+/* Structure to contain all our information, so we can pass it to callbacks */
+
 
 #ifdef _WIN32
 enum ForeColour
@@ -66,16 +74,44 @@ int main(int argc, char* argv[])
 {
     // std::signal(SIGINT, handleSignal);
 
+    char userInput;
+    
     portal::Zed zed;
     zed.setResloution(1280, 720);
     zed.setBitMode(zedMode::EIGHT);
+    
     if (zed.startZed())
         return -1;
     cout << "Open zed, good" << endl;
+    
 
    
-    portal::Comm comm("https://api.portal301.com/portalComm_v0/");
-    //portal::Comm comm("https://192.168.0.29:3333/portalComm_v0/");
+    portal::Comm comm("https://api.portal301.com/portalComm_v0.1/");
+    // portal::Comm comm("https://192.168.0.35:3333/portalComm_v0.1/");
+
+    portal::Profile profile = {
+        "SN000-FAKE-3566",
+        "J-test0",       // alias
+        "camera",        // type
+        "no authLevel",  // authLevel
+        "no-master",     // status
+        "no location",   // location
+        "no createdAt",  // createdAt
+        "no descriptions", // descriptions
+        "no vender",     // vender
+        {}               // apps (empty vector)
+    };
+
+    comm.setProfile(profile);
+    //comm.fetchAPI((const char*)"https://api.portal301.com");
+    // curl�� C���̺귯���� url�� const char* �������� �����ؾ���.
+    bool resAPI = comm.createModule((const char*)"https://api.portal301.com/fetch/v0.1/module/register");
+    // bool resAPI = comm.createModule((const char*)"https://192.168.0.35/fetch/v0.1/module/register");
+    if (!resAPI) {
+        std::cout << "API fetch failed." << std::endl;
+        return -1;
+    }
+    comm.connectModule();
 
     comm.setOnTask();
     comm.registering();
@@ -88,9 +124,8 @@ int main(int argc, char* argv[])
 
             if (targetSetting == "distance-max") {
                 double value = ev.get_messages().at(0)->get_map()["value"]->get_double();
-                cout << "value : " << value << endl;
 
-                cout << "set Distance ..." << endl;
+                cout << "Set Distance ... " << value << endl;
                 if (zed.getMinDistance() >= value) {
                     cout << "Invalid Value(minValue > maxValue)" << zed.getMinDistance() << zed.getMaxDistance() << endl;
                     return;
@@ -112,7 +147,7 @@ int main(int argc, char* argv[])
                     return;
                 }
                 if (value < 0.2) {
-                    cout << "Invalid Value in ZED Min Distance" << endl;
+                    cout << "Invalid Value in ZED Min Distance " << endl;
                     return;
                 }
                 zed.setMinDistance((float)value);
@@ -123,7 +158,7 @@ int main(int argc, char* argv[])
 
                 if ((int)value == 8) zed.setBitMode(zedMode::EIGHT);
                 else if ((int)value == 12) zed.setBitMode(zedMode::TWELVE);
-                else cout << "Invalid Value in zed Bit Mode" << endl;
+                else cout << "Invalid Value in zed Bit Mode " << endl;
             }
         }
     });
@@ -131,7 +166,15 @@ int main(int argc, char* argv[])
     portal::RTC portalRTC(&comm);
     portalRTC.setOnSignaling();
 
-    //zed.datachannel = portalRTC.getChannel();
+    
+    /*
+    thread thread3 = thread(&portal::RTC::receiveThread, &portalRTC);
+    thread3.detach();
+    poGst gst(&zed, &portalRTC);
+    gst.setElements();
+    */
+
+    int controlFlag = 0;
 
 #ifdef __linux
     // Save the current terminal settings
@@ -145,7 +188,7 @@ int main(int argc, char* argv[])
 #endif
 
     PrintConsole("[Notice] 'q' Press >> exit program", ForeColour::Yellow);
-    PrintConsole("Waiting for Connection ... ", ForeColour::Blue);
+    PrintConsole("Waiting for Connection Request ... ", ForeColour::Blue);
 
     while (true)
     {
@@ -175,12 +218,20 @@ int main(int argc, char* argv[])
             std::cout << "You pressed: " << keyboardInput << "\n";
         }
 #endif
-
+        
         // cout << "loop" << endl;
-        if (portalRTC.getChannelStatus())
+        if (portalRTC.areAnyChannelsOpen())
         {
+            
+            if (controlFlag == 0) {
+                thread thread3 = thread(&portal::RTC::receiveThread, &portalRTC);
+                thread3.detach();
+                controlFlag = 1;
+            }
+
+            
             // pass by reference
-            auto [rgb, depth, quaternion] = zed.extractFrame(portalRTC.getChannelStatus());
+            auto [rgb, depth, quaternion] = zed.extractFrame();
 
             if (quaternion == "NULL")
             {
@@ -188,14 +239,10 @@ int main(int argc, char* argv[])
                 break;
             }
 
-            if (portalRTC.getChannelBufferedAmount() != 0) {
-                //cout << "[Buffered Amount : " << portalRTC.getChannelBufferedAmount() << "] Do not Send Data" << endl;
-                continue;
-            }
-
-            portalRTC.sendDataToChannel("RGB", &rgb); // pass by reference
+            portalRTC.sendDataToChannel("RGB", &rgb);
             portalRTC.sendDataToChannel("DEPTH", &depth);
             portalRTC.sendDataToChannel("SENSOR", quaternion);
+            
         }
         else
         {
