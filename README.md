@@ -1,6 +1,6 @@
 # zedApp - Zed Application for PORTAL301 System
 ### necessary library (you should install this)
-socket.io-cpp-client, openssl, libdatachannel, zed-sdk(with cuda), opencv
+socket.io-cpp-client, openssl, libdatachannel, zed-sdk(with cuda), opencv, curl
 
 ### brief about this project files
 - portalComm.h<br>
