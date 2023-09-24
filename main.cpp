@@ -3,8 +3,9 @@
 // #include "poGst.hpp"
 #include "portalComm.hpp"
 #include "portalRTC.hpp"
-#include "portalZed.hpp"
+
 #include <thread>
+#include <opencv2/opencv.hpp>
 
 #ifdef _WIN32
 #include <conio.h>
@@ -75,22 +76,22 @@ int main(int argc, char* argv[])
     // std::signal(SIGINT, handleSignal);
     // char userInput;
     
-    portal::Zed zed;
-    zed.setResloution("HD1080");
-    zed.setBitMode(zedMode::EIGHT);
+    // portal::Zed zed;
+    // zed.setResloution("HD1080");
+    // zed.setBitMode(zedMode::EIGHT);
     
-    if (zed.startZed())
-        return -1;
-    cout << "Open zed, good" << endl;
+    // if (zed.startZed())
+    //     return -1;
+    // cout << "Open zed, good" << endl;
     
 
    
     // portal::Comm comm("https://api.portal301.com/portalComm_v0.1/");
-    // portal::Comm comm("https://192.168.0.35:3333/portalComm_v0.1/");
-    portal::Comm comm("https://192.168.0.29:3333/portalComm_v0.1/");
+    portal::Comm comm("https://192.168.0.35:3333/portalComm_v0.1/");
+    // portal::Comm comm("https://192.168.0.29:3333/portalComm_v0.1/");
 
     portal::Profile profile = {
-        "SN000-FAKE-3566",
+        "SN000-FAKE-3568",
         "J-test0",       // alias
         "camera",        // type
         "no authLevel",  // authLevel
@@ -116,55 +117,6 @@ int main(int argc, char* argv[])
     comm.setOnTask();
     comm.registering();
 
-    comm.io.socket()->on("zed:command", [&zed](sio::event& ev) {
-        cout << "[ event Name ] " << ev.get_name() << endl;
-        if (ev.get_messages().at(0)->get_map().find("targetSetting") != ev.get_messages().at(0)->get_map().end())
-        {
-            string targetSetting = ev.get_messages().at(0)->get_map()["targetSetting"]->get_string();
-
-            if (targetSetting == "distance-max") {
-                double value = ev.get_messages().at(0)->get_map()["value"]->get_double();
-
-                cout << "Set Distance ... " << value << endl;
-                if (zed.getMinDistance() >= value) {
-                    cout << "Invalid Value(minValue > maxValue)" << zed.getMinDistance() << zed.getMaxDistance() << endl;
-                    return;
-                }
-
-                if (value > 20.0 || value < 1.0) {
-                    cout << "Invalid Value in ZED Max Distance" << endl;
-                    return;
-                }
-                cout << "set..." << endl;
-                zed.setMaxDistance((float)value);
-            }
-            else if (targetSetting == "distance-min") {
-                double value = ev.get_messages().at(0)->get_map()["value"]->get_double();
-                cout << "value : " << value << endl;
-
-                if (zed.getMaxDistance() <= value) {
-                    cout << "Invalid Value(minValue > maxValue)" << zed.getMinDistance() << zed.getMaxDistance() << endl;
-                    return;
-                }
-                if (value < 0.2) {
-                    cout << "Invalid Value in ZED Min Distance " << endl;
-                    return;
-                }
-                zed.setMinDistance((float)value);
-
-            }
-            else if (targetSetting == "bit") {
-                double value = ev.get_messages().at(0)->get_map()["value"]->get_int();
-
-                if ((int)value == 8) zed.setBitMode(zedMode::EIGHT);
-                else if ((int)value == 9) zed.setBitMode(zedMode::NINE);
-                else if ((int)value == 10) zed.setBitMode(zedMode::TEN);
-                else if ((int)value == 12) zed.setBitMode(zedMode::TWELVE);
-                else cout << "Invalid Value in zed Bit Mode " << endl;
-            }
-        }
-    });
-
     portal::RTC portalRTC(&comm);
     portalRTC.setOnSignaling();
 
@@ -175,6 +127,14 @@ int main(int argc, char* argv[])
     poGst gst(&zed, &portalRTC);
     gst.setElements();
     */
+
+   cv::Mat redMatrix(720,1280,CV_8UC3, cv::Scalar(0,0,255));
+   cv::Mat greenMatrix(720,1280,CV_8UC3, cv::Scalar(0,255,0));
+   std::vector<unsigned char> byte_redMat;
+   std::vector<unsigned char> byte_greenMat;
+   cv::imencode(".png", redMatrix, byte_redMat);
+   cv::imencode(".jpg", greenMatrix, byte_greenMat);
+
 
     int controlFlag = 0;
 
@@ -235,25 +195,22 @@ int main(int argc, char* argv[])
 
             
             // pass by reference
-            auto [rgb, depth, quaternion] = zed.extractFrame();
+            // auto [rgb, depth, quaternion] = zed.extractFrame();
 
-            if (quaternion == "NULL")
-            {
-                cout << "zed camera cannot grap. plz check the zed camera" << endl;
-                break;
-            }
+            auto rgb = byte_redMat;
+            auto depth = byte_greenMat;
 
             portalRTC.sendDataToChannel("RGB", &rgb);
             portalRTC.sendDataToChannel("DEPTH", &depth);
-            portalRTC.sendDataToChannel("SENSOR", quaternion);
-            
+            // portalRTC.sendDataToChannel("SENSOR", quaternion);
+            usleep(20 * 1000);
         }
         else
         {
             // cout << "channel not opened" << endl;
         }
     }
-    zed.close();
+    // zed.close();
 
     return 0;
 }

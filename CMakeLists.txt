@@ -7,7 +7,7 @@ project(
 
 # Set the C++ standard (change if needed)
 set(CMAKE_CXX_STANDARD 17)
-
+set(CMAKE_BUILD_TYPE Release)
 
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
 
@@ -26,11 +26,6 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio")
 
     # Set include directories
     include_directories(includes)
-    include_directories(
-        include
-        "C:/Program Files (x86)/ZED SDK/include"
-        "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.7/include"
-    )
 
     # Add subdirectories for libraries and main executable
     add_subdirectory(lib)
@@ -42,22 +37,12 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio")
     # target_link_libraries(PORTAL301_ZED_Application PRIVATE your_required_package1::your_required_package1 your_required_package2::your_required_package2)
 
     # Link against the libraries you built in the lib directory
-    target_link_libraries(PORTAL301_ZED_Application PRIVATE portalZed portalComm portalRTC poGst)
+    target_link_libraries(PORTAL301_ZED_Application PRIVATE portalComm portalRTC poGst)
 
-    # Set linker options
-    target_link_directories(PORTAL301_ZED_Application PRIVATE
-        "C:/Program Files (x86)/ZED SDK/lib"
-        "C:/Program Files (x86)/ZED SDK/lib/Release"
-    )
 
-    # Link additional dependencies
-    target_link_libraries(PORTAL301_ZED_Application PRIVATE
-        "C:/Program Files (x86)/ZED SDK/lib/sl_zed64.lib"
-        "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.7/lib/x64/cuda.lib"
-        "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.7/lib/x64/cudart.lib"
-    )
-else()
+    else()
     message("build for gcc/g++ and make")
+    find_package(OpenCV REQUIRED)
     add_executable(program main.cpp)
     add_subdirectory(lib)
 
@@ -66,13 +51,14 @@ else()
         program
             PUBLIC
             ${CMAKE_SOURCE_DIR}/includes
+            ${OpenCV_INCLUDE_DIRS}
     )
 
-
     target_link_libraries(program 
-            myZed
+            # myZed
             portalrtc
             portalcomm
+            ${OpenCV_LIBS}
         ) 
     target_compile_options(program PUBLIC -Wall -Werror)
 endif()

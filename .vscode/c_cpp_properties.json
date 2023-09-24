@@ -4,11 +4,12 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/include/gstreamer-1.0/*",
-                "/usr/include/glib-2.0/**",
-                "/usr/local/**",
-                "/usr/bin/curl",
-                "/home/portal301/devSettings/libdatachannel/**"
+                "/usr/include/**",
+                // "/usr/local/**",
+                // "/usr/bin/curl",
+                "/usr/share/**",
+                "/home/portal301/workspace/devSet/libdatachannel/include/**",
+                "/home/portal301/workspace/devSet/**"
             ],
             "defines": [],
             "cStandard": "c17",
